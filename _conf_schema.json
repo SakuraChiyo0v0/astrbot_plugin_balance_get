@@ -15,7 +15,7 @@
         "description": "🎨 单项内容模板",
         "type": "text",
         "default": "🟢 **{{source_name}}**\n   💵 {{balance}} {{currency}}",
-        "hint": "自定义余额显示的格式。可用变量：{{source_name}}, {{currency}}, {{balance}}(智能余额), {{total_balance}}, {{remaining_balance}}, {{used_balance}}, {{raw_info}}。"
+        "hint": "可用变量：{{source_name}}(平台), {{currency}}(币种), {{balance}}(智能余额), {{total_balance}}(总额), {{remaining_balance}}(剩余), {{used_balance}}(已用), {{raw_info}}(备注)。"
     },
     "header_template": {
         "description": "🏷️ 标题模板",
