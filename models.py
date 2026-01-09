@@ -14,17 +14,21 @@ class BalanceResult:
 
     def to_string(self) -> str:
         if self.error:
-            return f"❌ {self.source_name} 查询失败: {self.error}"
-        
-        msg = f"💰 {self.source_name} 余额查询\n"
-        msg += f"━━━━━━━━━━━━━━\n"
-        msg += f"💵 币种: {self.currency}\n"
-        msg += f"📈 总额: {self.total_balance}\n"
-        if self.remaining_balance != "0":
-            msg += f"📉 剩余: {self.remaining_balance}\n"
-        if self.used_balance != "0":
-            msg += f"📊 已用: {self.used_balance}\n"
-        
+            return f"🔴 **{self.source_name}**\n   ❌ {self.error}"
+
+        # 如果剩余余额等于总余额，说明是纯余额型账户，只显示一行
+        if self.remaining_balance == self.total_balance:
+            msg = f"🟢 **{self.source_name}**\n"
+            msg += f"   💵 {self.total_balance} {self.currency}"
+        else:
+            # 额度型账户，显示详情
+            msg = f"🟢 **{self.source_name}**\n"
+            msg += f"   💵 余额: {self.remaining_balance} {self.currency}\n"
+            msg += f"   📈 总额: {self.total_balance} {self.currency}"
+            if self.used_balance != "0":
+                msg += f"\n   📊 已用: {self.used_balance} {self.currency}"
+
         if self.raw_info:
-            msg += f"📝 备注: {self.raw_info}\n"
+            msg += f"\n   📝 {self.raw_info}"
+
         return msg

@@ -5,7 +5,7 @@ from astrbot.core.config.astrbot_config import AstrBotConfig
 from .manager import BalanceManager
 import asyncio
 
-@register("balance_get", "SakuraChiyo0v0", "大模型余额查询。", "v0.3.0")
+@register("balance_get", "SakuraChiyo0v0", "大模型余额查询。", "v0.3.1")
 class MyPlugin(Star):
     def __init__(self, context: Context, config: AstrBotConfig):
         super().__init__(context)
@@ -56,7 +56,12 @@ class MyPlugin(Star):
 
         # 3. 使用 Manager 查询
         result = await self.manager.query(api_key, api_base)
-        yield event.plain_result(result.to_string())
+
+        msg = "💰 **当前余额查询**\n"
+        msg += "━━━━━━━━━━━━━━\n"
+        msg += result.to_string()
+
+        yield event.plain_result(msg)
 
     @filter.command("所有余额查询")
     async def query_all_balances(self, event: AstrMessageEvent):
@@ -128,10 +133,10 @@ class MyPlugin(Star):
                         p_id = p_id.split("/")[0]
                     unsupported_ids.append(p_id)
                 else:
-                    error_msgs.append(f"🔴 **{res.source_name}**\n   ❌ {res.error}")
+                    error_msgs.append(res.to_string())
             else:
                 # 成功
-                success_msgs.append(f"🟢 **{res.source_name}**\n   💵 {res.total_balance} {res.currency}")
+                success_msgs.append(res.to_string())
 
         if success_msgs:
             msg += "\n━━━━━━━━━━━━━━\n".join(success_msgs) + "\n"
