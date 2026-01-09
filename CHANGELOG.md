@@ -1,22 +1,30 @@
-# Changelog
+# 更新日志
 
-All notable changes to this project will be documented in this file.
+本项目的所有重要更改都将记录在此文件中。
+
+## [v0.1.2] - 2026-01-09
+
+### 🚀 新特性
+
+- **新指令**: 添加 `/所有余额查询` 指令，支持并发查询所有已配置模型的余额。
+- **并发查询**: 使用并行查询提高多模型查询时的性能。
+- **结果分组**: 将查询结果按状态（成功、错误、不支持）分组展示，提升可读性。
 
 ## [v0.1.1] - 2026-01-09
 
-### 🐛 Fixes
+### 🐛 修复
 
-- **Command Conflict**: Renamed command from `/balance` to `/当前余额查询` to avoid conflicts with other plugins.
+- **指令冲突**: 将指令从 `/balance` 重命名为 `/当前余额查询`，以避免与其他插件冲突。
 
 ## [v0.1.0] - 2026-01-09
 
-### 🚀 Features
+### 🚀 新特性
 
-- **Initial Release**: First version of the balance query plugin.
-- **Multi-Provider Support**:
+- **初始版本**: 余额查询插件的第一个版本。
+- **多厂商支持**:
   - DeepSeek (CNY)
   - Moonshot AI / Kimi (CNY)
   - SiliconCloud (USD)
-- **Auto-Detection**: Automatically identifies the current LLM provider based on `api_base`.
-- **Permission Control**: Added `admin_only` configuration (default: true).
-- **Security**: API Keys are masked in logs.
+- **自动识别**: 根据 `api_base` 自动识别当前 LLM 服务商。
+- **权限控制**: 添加 `admin_only` 配置（默认：开启）。
+- **安全性**: 日志中自动脱敏 API Key。
