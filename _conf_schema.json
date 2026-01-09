@@ -10,5 +10,23 @@
         "type": "bool",
         "default": true,
         "hint": "在 /所有余额查询 中，是否在末尾列出未适配的平台名称。"
+    },
+    "output_template": {
+        "description": "🎨 单项内容模板",
+        "type": "text",
+        "default": "🟢 **{{source_name}}**\n   💵 {{balance}} {{currency}}",
+        "hint": "自定义余额显示的格式。可用变量：{{source_name}}, {{currency}}, {{balance}}(智能余额), {{total_balance}}, {{remaining_balance}}, {{used_balance}}, {{raw_info}}。"
+    },
+    "header_template": {
+        "description": "🏷️ 标题模板",
+        "type": "text",
+        "default": "💰 **{{title}}**",
+        "hint": "消息头部的格式。可用变量：{{title}} (如“当前余额查询”)。标题下方会自动添加分隔符。"
+    },
+    "separator_template": {
+        "description": "➖ 分隔符模板",
+        "type": "text",
+        "default": "\n━━━━━━━━━━━━━━\n",
+        "hint": "标题与内容、以及多项结果之间的分隔符。支持 \\n 换行。"
     }
 }

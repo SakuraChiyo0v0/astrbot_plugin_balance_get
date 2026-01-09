@@ -80,6 +80,21 @@ Bot:
 | :--- | :--- | :--- | :--- |
 | `admin_only` | bool | `true` | 是否仅允许管理员使用 `/balance` 指令。建议开启以防止群友随意查询。 |
 | `show_unsupported` | bool | `true` | 在 `/所有余额查询` 中，是否显示未适配的平台列表。 |
+| `output_template` | string | `🟢 **{{source_name}}**\n   💵 {{balance}} {{currency}}` | 自定义余额显示模板。支持变量见下表。 |
+| `header_template` | string | `💰 **{{title}}**` | 消息头部的格式。支持变量：`{{title}}`。标题下方会自动添加分隔符。 |
+| `separator_template` | string | `\n━━━━━━━━━━━━━━\n` | 标题与内容、以及多项结果之间的分隔符。 |
+
+### 模板变量说明
+
+| 变量名 | 说明 |
+| :--- | :--- |
+| `{{source_name}}` | 平台名称 (如 DeepSeek) |
+| `{{currency}}` | 币种 (如 CNY) |
+| `{{balance}}` | 智能余额（如果剩余=总额，显示总额；否则显示剩余） |
+| `{{total_balance}}` | 总额 |
+| `{{remaining_balance}}` | 剩余余额 |
+| `{{used_balance}}` | 已用额度 |
+| `{{raw_info}}` | 备注信息 |
 
 ## 🛠️ 开发与扩展
 

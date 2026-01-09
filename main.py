@@ -5,12 +5,17 @@ from astrbot.core.config.astrbot_config import AstrBotConfig
 from .manager import BalanceManager
 import asyncio
 
-@register("balance_get", "SakuraChiyo0v0", "大模型余额查询。", "v0.3.1")
+@register("balance_get", "SakuraChiyo0v0", "大模型余额查询。", "v0.3.4")
 class MyPlugin(Star):
     def __init__(self, context: Context, config: AstrBotConfig):
         super().__init__(context)
         self.config = config
         self.manager = BalanceManager()
+
+    def _get_template(self, key, default):
+        """获取并处理模板（处理换行符）"""
+        tpl = self.config.get(key, default)
+        return tpl.replace("\\n", "\n")
 
     @filter.command("当前余额查询")
     async def balance(self, event: AstrMessageEvent):
@@ -57,15 +62,28 @@ class MyPlugin(Star):
         # 3. 使用 Manager 查询
         result = await self.manager.query(api_key, api_base)
 
-        msg = "💰 **当前余额查询**\n"
-        msg += "━━━━━━━━━━━━━━\n"
-        msg += result.to_string()
+        # 获取模板
+        item_tpl = self._get_template("output_template", "🟢 **{{source_name}}**\n   💵 {{balance}} {{currency}}")
+        header_tpl = self._get_template("header_template", "💰 **{{title}}**")
+        sep_tpl = self._get_template("separator_template", "\n━━━━━━━━━━━━━━\n")
+
+        # 渲染标题
+        msg = header_tpl.replace("{{title}}", "当前余额查询")
+        msg += sep_tpl
+
+        # 渲染内容
+        msg += result.to_string(item_tpl)
 
         yield event.plain_result(msg)
 
     @filter.command("所有余额查询")
     async def query_all_balances(self, event: AstrMessageEvent):
         """查询所有已配置模型的余额"""
+
+        # 获取模板
+        item_tpl = self._get_template("output_template", "🟢 **{{source_name}}**\n   💵 {{balance}} {{currency}}")
+        header_tpl = self._get_template("header_template", "💰 **{{title}}**")
+        sep_tpl = self._get_template("separator_template", "\n━━━━━━━━━━━━━━\n")
 
         # 权限检查
         if self.config.get("admin_only", True):
@@ -133,24 +151,28 @@ class MyPlugin(Star):
                         p_id = p_id.split("/")[0]
                     unsupported_ids.append(p_id)
                 else:
-                    error_msgs.append(res.to_string())
+                    error_msgs.append(res.to_string(item_tpl))
             else:
                 # 成功
-                success_msgs.append(res.to_string())
+                success_msgs.append(res.to_string(item_tpl))
+
+        # 渲染标题
+        msg = header_tpl.replace("{{title}}", "全平台余额汇总")
+        msg += sep_tpl
 
         if success_msgs:
-            msg += "\n━━━━━━━━━━━━━━\n".join(success_msgs) + "\n"
+            msg += sep_tpl.join(success_msgs) + "\n"
 
         if error_msgs:
             if success_msgs:
-                msg += "━━━━━━━━━━━━━━\n"
-            msg += "\n━━━━━━━━━━━━━━\n".join(error_msgs) + "\n"
+                msg += sep_tpl
+            msg += sep_tpl.join(error_msgs) + "\n"
 
         if unsupported_ids and self.config.get("show_unsupported", True):
             # 去重并排序
             unsupported_ids = sorted(list(set(unsupported_ids)))
             if success_msgs or error_msgs:
-                msg += "━━━━━━━━━━━━━━\n"
+                msg += sep_tpl
             msg += "⚪ **未适配平台**:\n   " + ", ".join(unsupported_ids) + "\n"
 
         # 如果没有成功也没有错误也没有不支持（理论上不可能），提示一下
