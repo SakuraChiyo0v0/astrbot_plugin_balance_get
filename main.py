@@ -11,7 +11,7 @@ class MyPlugin(Star):
         self.config = config
         self.manager = BalanceManager()
 
-    @filter.command("balance")
+    @filter.command("当前余额查询")
     async def balance(self, event: AstrMessageEvent):
         """查询当前大模型余额"""
         
