@@ -4,7 +4,7 @@ from astrbot.api import logger
 from astrbot.core.config.astrbot_config import AstrBotConfig
 from .manager import BalanceManager
 
-@register("balance_get", "SakuraChiyo0v0", "大模型余额查询。", "v0.1.0")
+@register("balance_get", "SakuraChiyo0v0", "大模型余额查询。", "v0.1.1")
 class MyPlugin(Star):
     def __init__(self, context: Context, config: AstrBotConfig):
         super().__init__(context)
