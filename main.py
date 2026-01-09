@@ -5,7 +5,7 @@ from astrbot.core.config.astrbot_config import AstrBotConfig
 from .manager import BalanceManager
 import asyncio
 
-@register("balance_get", "SakuraChiyo0v0", "大模型余额查询。", "v0.3.4")
+@register("astrbot_plugin_balance_get", "SakuraChiyo0v0", "支持通过命令查询模型平台的余额。", "v0.3.4")
 class MyPlugin(Star):
     def __init__(self, context: Context, config: AstrBotConfig):
         super().__init__(context)
