@@ -5,7 +5,7 @@ from astrbot.core.config.astrbot_config import AstrBotConfig
 from .manager import BalanceManager
 import asyncio
 
-@register("balance_get", "SakuraChiyo0v0", "大模型余额查询。", "v0.2.1")
+@register("balance_get", "SakuraChiyo0v0", "大模型余额查询。", "v0.2.2")
 class MyPlugin(Star):
     def __init__(self, context: Context, config: AstrBotConfig):
         super().__init__(context)
@@ -123,6 +123,9 @@ class MyPlugin(Star):
                 if "暂不支持" in res.error:
                     # 获取 Provider ID
                     p_id = providers_list[i].provider_config.get("id", "Unknown")
+                    # 简化 ID：如果包含 /，只保留前半部分（平台名）
+                    if "/" in p_id:
+                        p_id = p_id.split("/")[0]
                     unsupported_ids.append(p_id)
                 else:
                     error_msgs.append(f"🔴 **{res.source_name}**\n   ❌ {res.error}")
@@ -139,6 +142,8 @@ class MyPlugin(Star):
             msg += "\n━━━━━━━━━━━━━━\n".join(error_msgs) + "\n"
 
         if unsupported_ids:
+            # 去重并排序
+            unsupported_ids = sorted(list(set(unsupported_ids)))
             if success_msgs or error_msgs:
                 msg += "━━━━━━━━━━━━━━\n"
             msg += "⚪ **未适配平台**:\n   " + ", ".join(unsupported_ids) + "\n"
