@@ -5,7 +5,7 @@ from astrbot.core.config.astrbot_config import AstrBotConfig
 from .manager import BalanceManager
 import asyncio
 
-@register("balance_get", "SakuraChiyo0v0", "大模型余额查询。", "v0.2.2")
+@register("balance_get", "SakuraChiyo0v0", "大模型余额查询。", "v0.3.0")
 class MyPlugin(Star):
     def __init__(self, context: Context, config: AstrBotConfig):
         super().__init__(context)
@@ -141,7 +141,7 @@ class MyPlugin(Star):
                 msg += "━━━━━━━━━━━━━━\n"
             msg += "\n━━━━━━━━━━━━━━\n".join(error_msgs) + "\n"
 
-        if unsupported_ids:
+        if unsupported_ids and self.config.get("show_unsupported", True):
             # 去重并排序
             unsupported_ids = sorted(list(set(unsupported_ids)))
             if success_msgs or error_msgs:
