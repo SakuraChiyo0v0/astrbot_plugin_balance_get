@@ -5,7 +5,7 @@ from astrbot.core.config.astrbot_config import AstrBotConfig
 from .manager import BalanceManager
 import asyncio
 
-@register("balance_get", "SakuraChiyo0v0", "大模型余额查询。", "v0.2.0")
+@register("balance_get", "SakuraChiyo0v0", "大模型余额查询。", "v0.2.1")
 class MyPlugin(Star):
     def __init__(self, context: Context, config: AstrBotConfig):
         super().__init__(context)
@@ -75,60 +75,76 @@ class MyPlugin(Star):
             yield event.plain_result("⚠️ 当前未配置任何模型提供商。")
             return
 
-        yield event.plain_result(f"🔄 正在并发查询 {len(providers)} 个模型的余额，请稍候...")
+        # 1. 分组去重：(api_base, api_key) -> provider
+        # 只要 Base 和 Key 相同，就视为同一个钱包
+        unique_credentials = {}
 
-        # 并发查询所有 Provider
-        tasks = [self._query_single_provider(p) for p in providers]
+        for p in providers:
+            cfg = p.provider_config
+            api_base = cfg.get("api_base", "")
+            try:
+                api_key = p.get_current_key()
+            except:
+                keys = cfg.get("key", [])
+                api_key = keys[0] if keys else ""
+
+            if not api_key:
+                continue
+
+            # 使用 (api_base, api_key) 作为唯一标识
+            # 这里的 api_key 不脱敏，用于实际查询，但在内存中处理
+            unique_credentials[(api_base, api_key)] = p
+
+        if not unique_credentials:
+            yield event.plain_result("⚠️ 未找到有效的 API Key 配置。")
+            return
+
+        yield event.plain_result(f"🔄 正在查询 {len(unique_credentials)} 个平台的余额，请稍候...")
+
+        # 2. 并发查询
+        tasks = []
+        providers_list = [] # 用于记录对应的 Provider，以便获取 ID
+        for (base, key), p in unique_credentials.items():
+            tasks.append(self.manager.query(key, base))
+            providers_list.append(p)
+
         results = await asyncio.gather(*tasks)
 
-        # 拼接结果
-        msg = "💰 **所有模型余额汇总**\n"
+        # 3. 拼接结果
+        msg = "💰 **全平台余额汇总**\n"
         msg += "━━━━━━━━━━━━━━\n"
 
-        # 分类展示，成功的排前面
         success_msgs = []
         error_msgs = []
-        unsupported_msgs = []
+        unsupported_ids = []
 
-        for res in results:
-            if res['status'] == 'success':
-                success_msgs.append(res['msg'])
-            elif res['status'] == 'unsupported':
-                unsupported_msgs.append(res['msg'])
+        for i, res in enumerate(results):
+            if res.error:
+                if "暂不支持" in res.error:
+                    # 获取 Provider ID
+                    p_id = providers_list[i].provider_config.get("id", "Unknown")
+                    unsupported_ids.append(p_id)
+                else:
+                    error_msgs.append(f"🔴 **{res.source_name}**\n   ❌ {res.error}")
             else:
-                error_msgs.append(res['msg'])
+                # 成功
+                success_msgs.append(f"🟢 **{res.source_name}**\n   💵 {res.total_balance} {res.currency}")
 
         if success_msgs:
-            msg += "\n".join(success_msgs) + "\n"
+            msg += "\n━━━━━━━━━━━━━━\n".join(success_msgs) + "\n"
 
         if error_msgs:
-            msg += "--------------\n" + "\n".join(error_msgs) + "\n"
+            if success_msgs:
+                msg += "━━━━━━━━━━━━━━\n"
+            msg += "\n━━━━━━━━━━━━━━\n".join(error_msgs) + "\n"
 
-        if unsupported_msgs:
-            msg += "--------------\n" + "\n".join(unsupported_msgs)
+        if unsupported_ids:
+            if success_msgs or error_msgs:
+                msg += "━━━━━━━━━━━━━━\n"
+            msg += "⚪ **未适配平台**:\n   " + ", ".join(unsupported_ids) + "\n"
+
+        # 如果没有成功也没有错误也没有不支持（理论上不可能），提示一下
+        if not success_msgs and not error_msgs and not unsupported_ids:
+            msg += "⚠️ 未检测到有效的平台配置。"
 
         yield event.plain_result(msg)
-
-    async def _query_single_provider(self, provider) -> dict:
-        """辅助方法：查询单个 Provider"""
-        cfg = provider.provider_config
-        p_id = cfg.get("id", "unknown")
-        api_base = cfg.get("api_base", "")
-
-        try:
-            api_key = provider.get_current_key()
-        except:
-            keys = cfg.get("key", [])
-            api_key = keys[0] if keys else ""
-
-        if not api_key:
-            return {"status": "error", "msg": f"⚪ **{p_id}**: ❌ 未配置 API Key"}
-
-        result = await self.manager.query(api_key, api_base)
-
-        if result.error:
-            if "暂不支持" in result.error:
-                return {"status": "unsupported", "msg": f"⚪ **{p_id}**: 🚫 暂不支持"}
-            return {"status": "error", "msg": f"🔴 **{p_id}**: ❌ {result.error}"}
-
-        return {"status": "success", "msg": f"🟢 **{p_id}** ({result.source_name}): {result.total_balance} {result.currency}"}
