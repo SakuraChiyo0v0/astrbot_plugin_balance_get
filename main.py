@@ -5,29 +5,50 @@ from astrbot.core.config.astrbot_config import AstrBotConfig
 from .manager import BalanceManager
 import asyncio
 
-@register("astrbot_plugin_balance_get", "SakuraChiyo0v0", "支持通过命令查询模型平台的余额。", "v0.3.4")
+@register("astrbot_plugin_balance_get", "SakuraChiyo0v0", "支持通过命令查询模型平台的余额。", "v0.4.0")
 class MyPlugin(Star):
+    DEFAULT_TEMPLATES = {
+        "output_template": "🟢 **{{source_name}}**\n   💵 {{balance}} {{currency}}",
+        "header_template": "💰 **{{title}}**",
+        "separator_template": "\n━━━━━━━━━━━━━━\n"
+    }
+
     def __init__(self, context: Context, config: AstrBotConfig):
         super().__init__(context)
         self.config = config
         self.manager = BalanceManager()
 
-    def _get_template(self, key, default):
+    def _is_admin(self, event: AstrMessageEvent) -> bool:
+        """检查是否满足管理员权限要求"""
+        if not self.config.get("admin_only", True):
+            return True
+        user_id = event.get_sender_id()
+        admins = self.context.get_config().admins_id
+        return user_id in admins
+
+    def _get_template(self, key: str) -> str:
         """获取并处理模板（处理换行符）"""
+        default = self.DEFAULT_TEMPLATES.get(key, "")
         tpl = self.config.get(key, default)
         return tpl.replace("\\n", "\n")
+
+    def _get_api_key(self, provider) -> str:
+        """安全地获取 API Key"""
+        try:
+            return provider.get_current_key()
+        except Exception:
+            # 捕获所有异常，回退到直接读取配置
+            keys = provider.provider_config.get("key", [])
+            return keys[0] if keys else ""
 
     @filter.command("当前余额查询")
     async def balance(self, event: AstrMessageEvent):
         """查询当前大模型余额"""
         # ... (保持原有逻辑不变) ...
         # 权限检查
-        if self.config.get("admin_only", True):
-            user_id = event.get_sender_id()
-            admins = self.context.get_config().admins_id
-            if user_id not in admins:
-                yield event.plain_result("🚫 只有管理员可以使用此指令。")
-                return
+        if not self._is_admin(event):
+            yield event.plain_result("🚫 只有管理员可以使用此指令。")
+            return
 
         # 1. 获取当前会话使用的 Provider
         try:
@@ -41,15 +62,8 @@ class MyPlugin(Star):
         provider_id = provider_config.get("id", "unknown")
         provider_type = provider_config.get("type", "unknown")
         api_base = provider_config.get("api_base", "")
-        api_key = ""
 
-        # 尝试获取 API Key
-        try:
-            api_key = provider.get_current_key()
-        except NotImplementedError:
-            keys = provider_config.get("key", [])
-            if keys:
-                api_key = keys[0]
+        api_key = self._get_api_key(provider)
 
         if not api_key:
              yield event.plain_result("无法获取当前模型的 API Key。")
@@ -63,9 +77,9 @@ class MyPlugin(Star):
         result = await self.manager.query(api_key, api_base)
 
         # 获取模板
-        item_tpl = self._get_template("output_template", "🟢 **{{source_name}}**\n   💵 {{balance}} {{currency}}")
-        header_tpl = self._get_template("header_template", "💰 **{{title}}**")
-        sep_tpl = self._get_template("separator_template", "\n━━━━━━━━━━━━━━\n")
+        item_tpl = self._get_template("output_template")
+        header_tpl = self._get_template("header_template")
+        sep_tpl = self._get_template("separator_template")
 
         # 渲染标题
         msg = header_tpl.replace("{{title}}", "当前余额查询")
@@ -81,17 +95,14 @@ class MyPlugin(Star):
         """查询所有已配置模型的余额"""
 
         # 获取模板
-        item_tpl = self._get_template("output_template", "🟢 **{{source_name}}**\n   💵 {{balance}} {{currency}}")
-        header_tpl = self._get_template("header_template", "💰 **{{title}}**")
-        sep_tpl = self._get_template("separator_template", "\n━━━━━━━━━━━━━━\n")
+        item_tpl = self._get_template("output_template")
+        header_tpl = self._get_template("header_template")
+        sep_tpl = self._get_template("separator_template")
 
         # 权限检查
-        if self.config.get("admin_only", True):
-            user_id = event.get_sender_id()
-            admins = self.context.get_config().admins_id
-            if user_id not in admins:
-                yield event.plain_result("🚫 只有管理员可以使用此指令。")
-                return
+        if not self._is_admin(event):
+            yield event.plain_result("🚫 只有管理员可以使用此指令。")
+            return
 
         providers = self.context.get_all_providers()
         if not providers:
@@ -105,11 +116,7 @@ class MyPlugin(Star):
         for p in providers:
             cfg = p.provider_config
             api_base = cfg.get("api_base", "")
-            try:
-                api_key = p.get_current_key()
-            except:
-                keys = cfg.get("key", [])
-                api_key = keys[0] if keys else ""
+            api_key = self._get_api_key(p)
 
             if not api_key:
                 continue
