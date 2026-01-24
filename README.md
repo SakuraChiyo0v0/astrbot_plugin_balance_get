@@ -16,6 +16,7 @@
   - 🦈 **DeepSeek (深度求索)**
   - 🌙 **Moonshot AI (Kimi)**
   - ☁️ **SiliconCloud (硅基流动)**
+  - 🌍 **ChatAnywhere**
 - **权限控制**：支持配置仅管理员可用，保护账户隐私。
 - **安全日志**：日志中自动脱敏 API Key，防止泄露。
 
