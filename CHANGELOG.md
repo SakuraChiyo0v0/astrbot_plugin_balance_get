@@ -7,6 +7,7 @@
 ### 🚀 新特性
 
 - **平台支持**: 新增 ChatAnywhere 余额查询支持（`fetchers/chatanywhere.py`）。
+- 感谢[@Arturia169](https://github.com/Arturia169)支持实现
 
 ## [v0.4.0] - 2026-01-12
 

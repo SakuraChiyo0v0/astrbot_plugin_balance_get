@@ -5,7 +5,7 @@ from astrbot.core.config.astrbot_config import AstrBotConfig
 from .manager import BalanceManager
 import asyncio
 
-@register("astrbot_plugin_balance_get", "SakuraChiyo0v0", "支持通过命令查询模型平台的余额。", "v0.4.0")
+@register("astrbot_plugin_balance_get", "SakuraChiyo0v0", "支持通过命令查询模型平台的余额。", "v0.5.1")
 class MyPlugin(Star):
     DEFAULT_TEMPLATES = {
         "output_template": "🟢 **{{source_name}}**\n   💵 {{balance}} {{currency}}",
