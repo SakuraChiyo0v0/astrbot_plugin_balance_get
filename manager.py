@@ -1,7 +1,7 @@
 from typing import List, Optional
 import aiohttp
 from .models import BalanceResult
-from .fetchers import BaseBalanceFetcher, DeepSeekFetcher, MoonshotFetcher, SiliconCloudFetcher
+from .fetchers import BaseBalanceFetcher, DeepSeekFetcher, MoonshotFetcher, SiliconCloudFetcher, ChatAnywhereFetcher
 
 class BalanceManager:
     def __init__(self):
@@ -9,6 +9,7 @@ class BalanceManager:
             DeepSeekFetcher(),
             MoonshotFetcher(),
             SiliconCloudFetcher(),
+            ChatAnywhereFetcher(),
         ]
         self._session: Optional[aiohttp.ClientSession] = None
 
